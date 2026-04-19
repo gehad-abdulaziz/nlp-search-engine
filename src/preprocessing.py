@@ -7,6 +7,10 @@ from nltk.stem import WordNetLemmatizer
 
 import nltk
 
+
+nltk.download('stopwords', quiet=True)
+nltk.download('wordnet', quiet=True)
+
 STOPWORDS = set(stopwords.words("english"))
 lemmatizer = WordNetLemmatizer()
 tokenizer = RegexpTokenizer(r"\w+")
@@ -40,9 +44,14 @@ def preprocess_text(text):
     # 5. Lemmatization
     tokens = [lemmatizer.lemmatize(t) for t in tokens]
 
-    return tokens
+    return ' '.join(tokens)
 
 
 # Test
 text = "The cars are running very fast!"
 print(preprocess_text(text))
+
+
+def preprocess_documents(documents):
+    return [preprocess_text(doc) for doc in documents]
+
