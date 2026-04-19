@@ -27,7 +27,7 @@ def preprocess_text(text):
     """
 
     if not isinstance(text, str):
-        return []
+        return ""
 
     # 1. Lowercase
     text = text.lower()
