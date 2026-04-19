@@ -1,24 +1,55 @@
 # Food Reviews Semantic Search Engine
 
-A search engine that finds relevant restaurant reviews based on meaning, not just keywords.
+A smart search engine that finds relevant food reviews based on meaning, not just exact keywords.
 
 ## Example
-Query: "quiet place for family dinner"
-Returns: Reviews like "cozy atmosphere, great for kids"
+Query: "spicy food with bad service"
+Returns reviews like "terrible experience, way too hot" even if the exact words are different.
+
+## Dataset
+Amazon Fine Food Reviews - 3000 reviews
+Source: https://www.kaggle.com/datasets/snap/amazon-fine-food-reviews
+
+## Project Structure
+```
+nlp-search-engine/
+├── data/
+│   └── Reviews.csv          (download from Kaggle - not on GitHub)
+├── src/
+│   ├── data_loader.py        (Gehad)
+│   ├── preprocessing.py      (Alaa)
+│   ├── tfidf_search.py       (Waad)
+│   ├── embedding_search.py   (Aliaa)
+│   └── evaluation.py         (Sama)
+├── notebooks/
+│   └── demo.ipynb            (Aya)
+├── main.py
+├── requirements.txt
+└── README.md
+```
 
 ## Team
 | Member | Role |
 |--------|------|
-| Jihad  | Project Manager + Data + GitHub |
-| Alaa   | Text Preprocessing |
-| Waad   | TF-IDF Baseline Search |
-| Olia   | Embedding Advanced Search |
-| Sama   | Evaluation and Comparison |
-| Aya    | Report + Demo Notebook |
+| Gehad | Project Manager + Data Loader + GitHub Setup |
+| Alaa | Text Preprocessing |
+| Waad | TF-IDF Baseline Search |
+| Aliaa | Embedding Advanced Search |
+| Sama | Evaluation and Comparison |
+| Aya | Report + Demo Notebook |
 
 ## How to Run
-pip install -r requirements.txt
+```bash
+git clone https://github.com/gehad-abdulaziz/nlp-search-engine
+cd nlp-search-engine
+python -m pip install -r requirements.txt
 python main.py
+```
 
-## Dataset
-Amazon Fine Food Reviews - 3000 reviews
+## Models
+- Baseline: TF-IDF + Cosine Similarity
+- Advanced: Sentence Transformers (BERT embeddings)
+
+## Evaluation
+- Metric: Precision@5
+- Comparison between TF-IDF and Embedding models
