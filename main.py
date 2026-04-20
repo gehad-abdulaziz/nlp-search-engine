@@ -37,8 +37,8 @@ def main():
 
         print("  Embedding results:")
         emb_results = search_embeddings(query, emb_model, embeddings, documents, top_k=5)
-        for i, result in enumerate(emb_results):
-            print(f"    {i+1}. {result[:80]}...")
+        for result in emb_results:
+            print(f"    {result['rank']}. [score: {result['score']}] {result['document'][:80]}...")
 
     print("\nStep 6: Evaluating...")
     evaluate(queries, vectorizer, tfidf_matrix, emb_model, embeddings, cleaned_docs, documents)
