@@ -29,10 +29,11 @@ def main():
 
     for query in queries:
         print(f"\nQuery: {query}")
+
         print("  TF-IDF results:")
         tfidf_results = search_tfidf(query, vectorizer, tfidf_matrix, documents, top_k=5)
-        for i, result in enumerate(tfidf_results):
-            print(f"    {i+1}. {result[:80]}...")
+        for result in tfidf_results:
+            print(f"    {result['rank']}. [score: {result['score']}] {result['document'][:80]}...")
 
         print("  Embedding results:")
         emb_results = search_embeddings(query, emb_model, embeddings, documents, top_k=5)
