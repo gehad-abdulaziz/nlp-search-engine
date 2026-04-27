@@ -1,0 +1,5 @@
+data/Reviews.csv
+data/Reviews.csv.zip
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
