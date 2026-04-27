@@ -75,7 +75,7 @@ st.title("🔍 Intelligent Search Engine")
 st.caption("Project 2 – NLP Course | Faculty of Computing & AI")
 
 # ── Load ALL 4 models (cached) ─────────────────────────────────────────────────
-@st.cache_resource(show_spinner="⏳ جارٍ تحميل الـ 4 موديلات – دقيقة واحدة...")
+@st.cache_resource(show_spinner="⏳ Loading all 4 models – please wait...")
 def load_all_models():
     import os, sys
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -95,14 +95,12 @@ def load_all_models():
     vectorizer, tfidf_matrix = build_tfidf(cleaned_docs)
 
     # 2. TF-IDF + BERT (Advanced)
-    # Returns (cross_encoder, vectorizer, tfidf_matrix) as a tuple
     tfidf_bert_model = build_tfidf_bert(cleaned_docs, documents)
 
     # 3. Word2Vec + Cosine (Baseline)
     w2v_model, w2v_vectors = build_w2v(cleaned_docs)
 
     # 4. Word2Vec + BERT (Advanced)
-    # Returns (cross_encoder, w2v_model, doc_vectors) as a tuple
     w2v_bert_model = build_w2v_bert(cleaned_docs, documents)
 
     return (
@@ -125,19 +123,19 @@ try:
     models_ready = True
 except FileNotFoundError:
     st.error(
-        "❌ ملف البيانات مش موجود.\n\n"
-        "حملي **Reviews.csv** من Kaggle وحطيه في مجلد `data/`\n\n"
+        "❌ Data file not found.\n\n"
+        "Please download **Reviews.csv** from Kaggle and place it in the `data/` folder.\n\n"
         "🔗 https://www.kaggle.com/datasets/snap/amazon-fine-food-reviews"
     )
     models_ready = False
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.header("⚙️ الإعدادات")
-    top_k = st.slider("عدد النتايج (Top-K)", min_value=1, max_value=10, value=5)
+    st.header("⚙️ Settings")
+    top_k = st.slider("Number of Results (Top-K)", min_value=1, max_value=10, value=5)
 
     st.markdown("---")
-    st.markdown("**💡 أمثلة جاهزة:**")
+    st.markdown("**💡 Example Queries:**")
     example_queries = [
         "great coffee and pastries",
         "bad service and cold food",
@@ -152,7 +150,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("""
-    **الـ 4 Models:**
+    **The 4 Models:**
     | # | Feature | Model |
     |---|---------|-------|
     | 1 | TF-IDF | Cosine *(Baseline)* |
@@ -169,12 +167,12 @@ tab1, tab2, tab3 = st.tabs(["🔍 Search", "📊 Evaluation & Plots", "ℹ️ Ab
 # ═══════════════════════════════════════════════════════════════════════════════
 with tab1:
     query = st.text_input(
-        "اكتبي الـ Query بتاعك هنا:",
+        "Enter your search query:",
         value=st.session_state.get("query_input", ""),
-        placeholder="مثلاً: food delivery problem",
+        placeholder="e.g. food delivery problem",
         key="query_input",
     )
-    search_clicked = st.button("🔎 ابحثي", type="primary", disabled=not models_ready)
+    search_clicked = st.button("🔎 Search", type="primary", disabled=not models_ready)
 
     if search_clicked and query.strip():
         from src.tfidf_search      import search_tfidf
@@ -182,10 +180,10 @@ with tab1:
         from src.tfidf_bert_search import search_tfidf_bert
         from src.w2v_bert_search   import search_w2v_bert
 
-        st.markdown(f"### نتايج البحث عن: `{query}`")
+        st.markdown(f"### Search Results for: `{query}`")
 
         # ── Run all 4 models ───────────────────────────────────────────────────
-        with st.spinner("جارٍ البحث في الـ 4 موديلات..."):
+        with st.spinner("Searching across all 4 models..."):
             r1 = search_tfidf(query, vectorizer, tfidf_matrix, documents, top_k=top_k)
             r2 = search_tfidf_bert(query, tfidf_bert_model, documents, top_k=top_k)
             r3 = search_w2v(query, w2v_model, w2v_vectors, documents, top_k=top_k)
@@ -222,7 +220,7 @@ with tab1:
 
         # ── Score comparison bar chart ─────────────────────────────────────────
         st.markdown("---")
-        st.markdown("### 📊 مقارنة الـ Scores للـ 4 موديلات")
+        st.markdown("### 📊 Score Comparison Across All 4 Models")
 
         fig, axes = plt.subplots(1, 4, figsize=(16, 4), sharey=False)
         colors_base = ["#2d6a9f", "#5599cc"]
@@ -249,24 +247,24 @@ with tab1:
 
         # ── Full document expanders ────────────────────────────────────────────
         st.markdown("---")
-        st.markdown("#### 📖 النص الكامل للنتايج")
+        st.markdown("#### 📖 Full Text of Results")
         for name, tag, results, _ in models_data:
-            with st.expander(f"{name} — Top {top_k} نتايج كاملة"):
+            with st.expander(f"{name} — Top {top_k} Full Results"):
                 for r in results:
                     st.markdown(f"**Rank #{r['rank']} | Score: {r['score']:.4f}**")
                     st.write(r["document"])
                     st.markdown("---")
 
     elif search_clicked and not query.strip():
-        st.warning("⚠️ اكتبي query الأول!")
+        st.warning("⚠️ Please enter a query first!")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TAB 2 — EVALUATION & PLOTS
 # ═══════════════════════════════════════════════════════════════════════════════
 with tab2:
-    st.markdown("### 📊 Evaluation – Precision@K مقارنة بين الـ 4 موديلات")
-    st.info("اضغطي الزر عشان تشغلي الـ evaluation على queries تجريبية.")
+    st.markdown("### 📊 Evaluation – Precision@K Comparison Across All 4 Models")
+    st.info("Click the button below to run the evaluation on sample queries.")
 
     eval_queries = [
         "food delivery problem",
@@ -324,19 +322,19 @@ with tab2:
         df_eval.index.name = "Query"
         df_eval.loc["**Average**"] = df_eval.mean().round(2)
 
-        st.markdown("#### 📋 Precision@5 لكل موديل لكل query")
+        st.markdown("#### 📋 Precision@5 per Model per Query")
         st.dataframe(df_eval.style.highlight_max(axis=1, color="#d1fae5"), use_container_width=True)
 
         avg_scores = df_eval.drop("**Average**").mean()
 
         # ── Plot 1: Average Precision Bar Chart ───────────────────────────────
-        st.markdown("#### 📊 Plot 1: متوسط الـ Precision@5")
+        st.markdown("#### 📊 Plot 1: Average Precision@5 per Model")
         fig1, ax1 = plt.subplots(figsize=(9, 4))
         bar_colors = ["#2d6a9f", "#7c3aed", "#2d9f6a", "#9f2d2d"]
         bars = ax1.bar(model_names, avg_scores.values, color=bar_colors, alpha=0.85, width=0.5)
         ax1.bar_label(bars, fmt="%.2f", padding=4, fontsize=11, fontweight="bold")
         ax1.set_ylabel("Avg Precision@5")
-        ax1.set_title("مقارنة متوسط الـ Precision@5 بين الـ 4 موديلات", fontsize=13, fontweight="bold")
+        ax1.set_title("Average Precision@5 Comparison Across All 4 Models", fontsize=13, fontweight="bold")
         ax1.set_ylim(0, 1.1)
         ax1.spines[["top", "right"]].set_visible(False)
         ax1.axhline(avg_scores.mean(), color="gray", linestyle="--", linewidth=1, label=f"Overall avg: {avg_scores.mean():.2f}")
@@ -345,7 +343,7 @@ with tab2:
         plt.close()
 
         # ── Plot 2: Per-query heatmap ─────────────────────────────────────────
-        st.markdown("#### 🔥 Plot 2: Heatmap – Precision@5 لكل query")
+        st.markdown("#### 🔥 Plot 2: Heatmap – Precision@5 per Query")
         fig2, ax2 = plt.subplots(figsize=(11, 4))
         data_matrix = df_eval.drop("**Average**").values
         im = ax2.imshow(data_matrix.T, aspect="auto", cmap="YlOrRd", vmin=0, vmax=1)
@@ -365,7 +363,7 @@ with tab2:
         plt.close()
 
         # ── Plot 3: Line chart per query ──────────────────────────────────────
-        st.markdown("#### 📈 Plot 3: الـ Precision لكل query عبر الـ 4 موديلات")
+        st.markdown("#### 📈 Plot 3: Precision per Query Across All 4 Models")
         fig3, ax3 = plt.subplots(figsize=(11, 4))
         short_names = ["TF-IDF\nCosine", "TF-IDF\nBERT", "W2V\nCosine", "W2V\nBERT"]
         line_colors = ["#e74c3c", "#3498db", "#2ecc71", "#9b59b6", "#f39c12"]
@@ -374,7 +372,7 @@ with tab2:
             ax3.plot(short_names, vals, marker="o", linewidth=2,
                      color=line_colors[j], label=q[:30], alpha=0.8)
         ax3.set_ylabel("Precision@5")
-        ax3.set_title("Precision@5 لكل query عبر الـ 4 موديلات", fontsize=12, fontweight="bold")
+        ax3.set_title("Precision@5 per Query Across All 4 Models", fontsize=12, fontweight="bold")
         ax3.legend(fontsize=8, loc="upper left")
         ax3.set_ylim(-0.05, 1.1)
         ax3.spines[["top", "right"]].set_visible(False)
@@ -383,7 +381,7 @@ with tab2:
         plt.close()
 
         # ── Plot 4: Radar chart ───────────────────────────────────────────────
-        st.markdown("#### 🕸️ Plot 4: Radar Chart – مقارنة شاملة")
+        st.markdown("#### 🕸️ Plot 4: Radar Chart – Overall Comparison")
         import numpy as np
         categories = [q[:20] for q in eval_queries]
         N = len(categories)
@@ -400,26 +398,26 @@ with tab2:
         ax4.set_xticks(angles[:-1])
         ax4.set_xticklabels(categories, fontsize=8)
         ax4.set_ylim(0, 1)
-        ax4.set_title("Radar Chart – Precision@5 لكل موديل", fontsize=12, fontweight="bold", pad=20)
+        ax4.set_title("Radar Chart – Precision@5 per Model", fontsize=12, fontweight="bold", pad=20)
         ax4.legend(loc="upper right", bbox_to_anchor=(1.35, 1.1), fontsize=9)
         st.pyplot(fig4)
         plt.close()
 
         # ── Summary ───────────────────────────────────────────────────────────
         st.markdown("---")
-        st.markdown("#### 🏆 الخلاصة")
+        st.markdown("#### 🏆 Summary")
         best_model = avg_scores.idxmax()
         worst_model = avg_scores.idxmin()
-        st.success(f"✅ **أفضل موديل:** {best_model.replace(chr(10), ' ')} بـ Precision@5 = {avg_scores.max():.2f}")
-        st.warning(f"⚠️ **أضعف موديل:** {worst_model.replace(chr(10), ' ')} بـ Precision@5 = {avg_scores.min():.2f}")
+        st.success(f"✅ **Best Model:** {best_model.replace(chr(10), ' ')} with Precision@5 = {avg_scores.max():.2f}")
+        st.warning(f"⚠️ **Weakest Model:** {worst_model.replace(chr(10), ' ')} with Precision@5 = {avg_scores.min():.2f}")
 
         baseline_avg = (avg_scores.iloc[0] + avg_scores.iloc[2]) / 2
         advanced_avg = (avg_scores.iloc[1] + avg_scores.iloc[3]) / 2
         if advanced_avg > baseline_avg:
             improvement = ((advanced_avg - baseline_avg) / baseline_avg * 100) if baseline_avg > 0 else 0
-            st.info(f"🚀 الـ Advanced models أحسن من الـ Baseline بنسبة **{improvement:.1f}%** في المتوسط")
+            st.info(f"🚀 Advanced models outperform Baseline models by **{improvement:.1f}%** on average.")
         else:
-            st.info("📊 الـ Baseline models حققت نتايج قريبة من الـ Advanced على الـ dataset ده")
+            st.info("📊 Baseline models achieved results close to the Advanced models on this dataset.")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -427,13 +425,13 @@ with tab2:
 # ═══════════════════════════════════════════════════════════════════════════════
 with tab3:
     st.markdown("""
-    ### 📚 عن المشروع
+    ### 📚 About the Project
 
-    **Dataset:** Amazon Fine Food Reviews – أول 3000 review
+    **Dataset:** Amazon Fine Food Reviews – first 3,000 reviews
 
     ---
 
-    ### ⚙️ Preprocessing
+    ### ⚙️ Preprocessing Steps
     - Lowercase
     - Remove punctuation & numbers
     - Tokenization
@@ -442,10 +440,10 @@ with tab3:
 
     ---
 
-    ### 🤖 الـ 4 Models
+    ### 🤖 The 4 Models
 
-    | # | Feature Extraction | Model | النوع |
-    |---|--------------------|-------|-------|
+    | # | Feature Extraction | Model | Type |
+    |---|--------------------|-------|------|
     | 1 | **TF-IDF** | Cosine Similarity | Baseline |
     | 2 | **TF-IDF** | BERT Cross-Encoder | Advanced |
     | 3 | **Word2Vec** (avg vectors) | Cosine Similarity | Baseline |
@@ -453,13 +451,13 @@ with tab3:
 
     ---
 
-    ### 📊 Evaluation
-    - **Precision@K**: عدد النتايج الـ relevant / K
-    - مقارنة بين الـ 4 models على 5 queries مختلفة
+    ### 📊 Evaluation Metric
+    - **Precision@K**: number of relevant results in top-K / K
+    - Comparison across all 4 models on 5 different queries
 
     ---
 
-    ### 👩‍💻 الفريق
+    ### 👩‍💻 Team
     Gehad · Alaa · Waad · Aliaa · Sama · Aya
 
     **Capital University – Faculty of Computing & AI | NLP Course 2025-2026**
