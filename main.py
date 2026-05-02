@@ -12,8 +12,8 @@ Models
 
 from src.data_loader       import load_data, get_documents, save_sample
 from src.preprocessing     import preprocess_documents
-from src.tfidf_search      import build_tfidf,  search_tfidf
-from src.w2v_cosine_search import build_w2v,    search_w2v, search_w2v_cosine
+from src.tfidf_search      import build_tfidf_improved,  search_tfidf
+from src.w2v_cosine_search import build_w2v_improved,    search_w2v, search_w2v_cosine
 from src.tfidf_bert_search import build_tfidf_bert, search_tfidf_bert
 from src.w2v_bert_search   import build_w2v_bert,   search_w2v_bert
 from src.evaluation        import evaluate
@@ -30,7 +30,7 @@ def main():
     print(SEPARATOR)
     print("STEP 1 : Loading data")
     print(SEPARATOR)
-    df        = load_data("data/Reviews.csv", n_samples=3000)
+    df        = load_data("data/Reviews.csv", n_samples=6000)
     documents = get_documents(df)
     save_sample(df)
     print(f"  Loaded {len(documents)} reviews")
@@ -49,10 +49,10 @@ def main():
     print(SEPARATOR)
 
     print("\n  [Model 1] TF-IDF + Cosine Similarity  (Baseline)")
-    vectorizer, tfidf_matrix = build_tfidf(cleaned_docs)
+    vectorizer, tfidf_matrix = build_tfidf_improved(cleaned_docs)
 
     print("\n  [Model 2] Word2Vec + Cosine Similarity  (Baseline on Embeddings)")
-    w2v_model, w2v_vectors = build_w2v(cleaned_docs)
+    w2v_model, w2v_vectors = build_w2v_improved(cleaned_docs)
 
     print("\n  [Model 3] TF-IDF + BERT Cross-Encoder  (Advanced)")
     # Returns (cross_encoder, vectorizer, tfidf_matrix) as a tuple
