@@ -16,7 +16,7 @@ from gensim.models import Word2Vec
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import CrossEncoder
 from src.preprocessing import preprocess_text
-from src.w2v_cosine_search import build_w2v
+from src.w2v_cosine_search import build_w2v_improved
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ def build_w2v_bert(cleaned_docs: list, documents: list = None):
         doc_vectors   : np.ndarray of shape (n_docs, vector_size)
     """
     # Train Word2Vec and encode documents
-    w2v_model, doc_vectors = build_w2v(cleaned_docs)
+    w2v_model, doc_vectors = build_w2v_improved(cleaned_docs)
 
     # Load Cross-Encoder
     print("[W2V+BERT] Loading Cross-Encoder: cross-encoder/ms-marco-MiniLM-L-6-v2")
@@ -94,11 +94,9 @@ def search_w2v_bert(query: str,
     vector_size = w2v_model.vector_size
 
     # ── Stage 1: Word2Vec fast retrieval ─────────────────────────────────────
-    cleaned_tokens = preprocess_text(query)
-    if not cleaned_tokens:
+    cleaned_query = preprocess_text(query)
+    if not cleaned_query:
         cleaned_query = query.lower()
-    else:
-        cleaned_query = " ".join(cleaned_tokens)
 
     query_vector = _average_vector(cleaned_query, w2v_model, vector_size)
 
