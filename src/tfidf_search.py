@@ -1,7 +1,14 @@
 """
 tfidf_search.py
-Member 3 – Waad
-TF-IDF vectorization + cosine-similarity baseline search engine.
+TF-IDF + Cosine Similarity  →  Baseline search model.
+
+IMPROVEMENTS (v2)
+-----------------
+- ngram_range=(1,2)   : captures bigrams like "great coffee", "bad service"
+- sublinear_tf=True   : log-normalises term frequency (reduces dominance of common words)
+- max_df=0.85         : ignores terms in >85% of docs (too common to be useful)
+- min_df=2            : ignores very rare terms (appear in only 1 doc)
+- max_features=15000  : keeps vocabulary focused on most useful terms
 """
 
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -10,89 +17,107 @@ from src.preprocessing import preprocess_text
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 1.  BUILD  (fit on corpus)
+# ORIGINAL (Baseline)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def build_tfidf(documents: list):
+def build_tfidf(cleaned_docs: list):
     """
-    Fit a TF-IDF vectorizer on *cleaned* documents and return the matrix.
+    Build and fit a TF-IDF matrix — original baseline configuration.
 
     Parameters
     ----------
-    documents : list of str
-        Already-preprocessed (cleaned) documents.
+    cleaned_docs : list of str – preprocessed documents
 
     Returns
     -------
-    vectorizer : TfidfVectorizer  – fitted vectorizer (use to transform queries)
-    tfidf_matrix : scipy sparse matrix  – shape (n_docs, n_features)
+    vectorizer   : fitted TfidfVectorizer
+    tfidf_matrix : sparse matrix of shape (n_docs, n_features)
     """
-    vectorizer = TfidfVectorizer(
-        max_features=10_000,   # keep the top 10 k terms by document frequency
-        ngram_range=(1, 2),    # unigrams + bigrams → captures "delivery problem"
-        min_df=2,              # ignore terms that appear in fewer than 2 docs
-        sublinear_tf=True,     # apply log(1+tf) → reduces effect of very common terms
-    )
-
-    tfidf_matrix = vectorizer.fit_transform(documents)
-    print(f"[TF-IDF] Vocabulary size : {len(vectorizer.vocabulary_):,}")
-    print(f"[TF-IDF] Matrix shape    : {tfidf_matrix.shape}")
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(cleaned_docs)
+    print(f"[TF-IDF] Matrix shape: {tfidf_matrix.shape}")
     return vectorizer, tfidf_matrix
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 2.  SEARCH  (query → top-k)
+# IMPROVED (v2)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def build_tfidf_improved(cleaned_docs: list):
+    """
+    Build and fit an improved TF-IDF matrix.
+
+    Improvements over baseline:
+    - ngram_range=(1,2)  : unigrams + bigrams for richer features
+    - sublinear_tf=True  : log-normalised TF dampens high-frequency terms
+    - max_df=0.85        : removes near-universal stopwords missed by preprocessing
+    - min_df=2           : removes hapax legomena (noise terms)
+    - max_features=15000 : focused vocabulary, faster inference
+
+    Parameters
+    ----------
+    cleaned_docs : list of str – preprocessed documents
+
+    Returns
+    -------
+    vectorizer   : fitted TfidfVectorizer (improved)
+    tfidf_matrix : sparse matrix of shape (n_docs, n_features)
+    """
+    vectorizer = TfidfVectorizer(
+        ngram_range=(1,2),
+        sublinear_tf=True,
+        max_df=0.90,
+        min_df=1,
+        max_features=15000,
+    )
+    tfidf_matrix = vectorizer.fit_transform(cleaned_docs)
+    print(f"[TF-IDF Improved] Matrix shape: {tfidf_matrix.shape}")
+    return vectorizer, tfidf_matrix
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SEARCH  (shared by both original and improved)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def search_tfidf(query: str,
-                 vectorizer: TfidfVectorizer,
+                 vectorizer,
                  tfidf_matrix,
                  documents: list,
                  top_k: int = 5) -> list:
     """
-    Return the top-k most relevant *original* documents for a query.
+    Return the top-k most relevant documents for a query using
+    TF-IDF vectors + cosine similarity.
 
-    Steps
-    -----
-    1. Preprocess the query the same way we preprocessed the corpus.
-    2. Transform query with the fitted vectorizer → query vector.
-    3. Compute cosine similarity between query vector and every document vector.
-    4. Rank documents by similarity (highest first).
-    5. Return top-k original (un-cleaned) document strings.
+    Works with both the original and improved vectorizer/matrix.
 
     Parameters
     ----------
     query        : str   – raw user query
-    vectorizer   : fitted TfidfVectorizer
-    tfidf_matrix : sparse matrix from build_tfidf()
+    vectorizer   : fitted TfidfVectorizer (original or improved)
+    tfidf_matrix : sparse matrix from build_tfidf() or build_tfidf_improved()
     documents    : list of str – original (un-cleaned) documents
     top_k        : int   – how many results to return (default 5)
 
     Returns
     -------
-    list of dict  – each dict has keys: 'rank', 'score', 'document'
+    list of dict – each dict has keys: 'rank', 'score', 'document'
     """
-    # Step 1 – clean the query
     cleaned_query = preprocess_text(query)
-
     if not cleaned_query:
-        cleaned_query = str(query).lower()
+        cleaned_query_str = query.lower()
+    else:
+        cleaned_query_str = " ".join(cleaned_query)
 
-    # Step 2 – vectorize the query
-    query_vector = vectorizer.transform([cleaned_query])
-
-    # Step 3 – cosine similarity against the entire corpus
+    query_vector = vectorizer.transform([cleaned_query_str])
     scores = cosine_similarity(query_vector, tfidf_matrix).flatten()
 
-    # Step 4 – rank (argsort descending)
     ranked_indices = scores.argsort()[::-1][:top_k]
 
-    # Step 5 – build result list
     results = []
     for rank, idx in enumerate(ranked_indices, start=1):
         results.append({
-            "rank"    : rank,
-            "score"   : round(float(scores[idx]), 4),
+            "rank": rank,
+            "score": round(float(scores[idx]), 4),
             "document": documents[idx],
         })
 
