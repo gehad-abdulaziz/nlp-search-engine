@@ -44,7 +44,13 @@ def build_tfidf_bert(cleaned_docs: list, documents: list = None):
         tfidf_matrix  : sparse TF-IDF matrix
     """
     # Build TF-IDF
-    vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(
+        ngram_range=(1,2),
+        sublinear_tf=True,
+        max_df=0.85,
+        min_df=1,
+        max_features=15000,
+    )
     tfidf_matrix = vectorizer.fit_transform(cleaned_docs)
     print(f"[TF-IDF+BERT] TF-IDF matrix shape: {tfidf_matrix.shape}")
 
