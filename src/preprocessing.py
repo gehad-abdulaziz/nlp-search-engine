@@ -43,6 +43,12 @@ def preprocess_text(text):
 
     # 5. Lemmatization
     tokens = [lemmatizer.lemmatize(t) for t in tokens]
+    text = contractions.fix(text)
+
+  
+    text = re.sub(r'<.*?>', '', text)
+
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
 
     return ' '.join(tokens)
 
