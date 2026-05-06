@@ -67,7 +67,7 @@ def build_tfidf_improved(cleaned_docs: list):
         ngram_range=(1,2),
         sublinear_tf=True,
         max_df=0.90,
-        min_df=1,
+        min_df=2,
         max_features=15000,
     )
     tfidf_matrix = vectorizer.fit_transform(cleaned_docs)
